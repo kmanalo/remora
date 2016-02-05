@@ -10,13 +10,14 @@
 #%
 #========================================================================
 #- IMPLEMENTATION
-#-      version     REMORA 1.5
+#-      version     REMORA 1.6
 #-      authors     Carlos Rosales (carlos@tacc.utexas.edu)
 #-                  Antonio Gomez  (agomez@tacc.utexas.edu)
 #-      license     MIT
 #
 #========================================================================
 #  HISTORY
+#       2016/02/05: Added function to store data in a db
 #       2015/12/08: Initial commit
 #========================================================================
 
@@ -90,4 +91,33 @@ if [ "$REMORA_CUDA" == "1" ]; then
     echo "$currenthost $max_mem $free_mem" >> $2/mem_all_nodes_gpu.txt
 fi
 
+}
+
+store_data_db()
+{
+#    local jobid=$2
+#    jobid=${jobid#remora_}
+    jobid=6514048
+    local files=($2/mem_stats_*.txt)
+    local prefix="$2/mem_stats_"
+    for file in "${files[@]}"; do
+        local node=${file#$prefix}
+        node=${node%.txt}
+        local idx=0
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            if [ $idx = 0 ]; then
+                idx=1
+                continue;
+            fi
+            local timestamp=`echo $line | awk '{print $1;}'`
+            local vmemmax=`echo $line | awk '{print $2;}'`
+            local vmem=`echo $line | awk '{print $3;}'`
+            local rmemmax=`echo $line | awk '{print $4;}'`
+            local rmem=`echo $line | awk '{print $5;}'`
+            local shmem=`echo $line | awk '{print $6;}'`
+            local memfree=`echo $line | awk '{print $7;}'`
+            local totalmax=`echo $line | awk '{print $8;}'`
+            insert_memory_usage $jobid $timestamp $node $vmemmax $vmem $rmemmax $rmem $shmem $memfree $totalmax
+        done < "$file"
+    done
 }
