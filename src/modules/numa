@@ -64,5 +64,21 @@ finalize_module_numa()
 
 store_data_db_numa()
 {
-  :
+    local jobid=$REMORA_JOB_ID
+    local files=($2/numa_stats_*.txt)
+    local prefix="$2/numa_stats_"
+    for file in "${files[@]}"; do
+        local node=${file#$prefix}
+        node=${node%.txt}
+        local idx=0
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            if [ $idx = 0 ]; then
+                idx=1
+                continue;
+            fi  
+            read timestamp node0hit node1hit node0miss node1miss node0local node1local node0other node1other node0free node1free node0used node1used <<< "$line"
+
+            insert_numa_usage $jobid $timestamp $node $node0hit $node1hit $node0miss $node1miss $node0local $node1local $node0other $node1other $node0free $node1free $node0used $node1used
+        done < "$file"
+    done
 }
