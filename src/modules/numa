@@ -61,3 +61,8 @@ finalize_module_numa()
 {
   :
 }
+
+store_data_db_numa()
+{
+  :
+}

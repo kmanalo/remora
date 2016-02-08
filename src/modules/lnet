@@ -48,3 +48,8 @@ finalize_module_lnet()
 {
   :
 }
+
+store_data_db_lnet()
+{
+  :
+}

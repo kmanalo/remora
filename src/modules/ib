@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/s
 #
 #========================================================================
 # HEADER
@@ -48,6 +48,27 @@ collect_data_ib()
 process_data_ib()
 {
   :
+}
+
+store_data_db_ib()
+{
+    local jobid=$REMORA_JOB_ID
+    local files=($2/ib_xmit_packets-*.txt)
+    local prefix="$2/ib_xmit_packets-"
+    for file in "${files[@]}"; do
+        local node=${file#$prefix}
+        node=${node%.txt}
+        local idx=0
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            if [ $idx = 0 ]; then
+                idx=1
+                continue;
+            fi  
+            read timestamp packets <<< "$line"
+
+            insert_ib_usage $jobid $timestamp $node $packets
+        done < "$file"
+    done
 }
 
 finalize_module_ib()

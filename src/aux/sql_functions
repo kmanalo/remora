@@ -64,14 +64,14 @@ create_database()
     sqlite3 $REMORADB "CREATE TABLE memory_usage (jobid INTEGER, timestamp INTEGER, node TEXT, vmemmax REAL, vmem REAL, rmemmax REAL, rmem REAL, shmem REAL, memfree REAL, totalmax REAL, PRIMARY KEY(jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES jobs(id))";
     sqlite3 $REMORADB "CREATE TABLE cpu_usage (jobid INTEGER, timestamp INTEGER, node TEXT, cpuid INTEGER, usage REAL, FOREIGN KEY(jobid) REFERENCES jobs(id), PRIMARY KEY(jobid, timestamp, cpuid, node))" ;
     sqlite3 $REMORADB "CREATE TABLE filesystem (jobid INTEGER, timestamp INTEGER, node TEXT, fs_name TEXT, requests INTEGER, read INTEGER, write INTEGER, PRIMARY KEY (jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES jobs(id))";
+    sqlite3 $REMORADB "CREATE TABLE ib_usage (jobid INTEGER, timestamp INTEGER, node TEXT, packets INTEGER, PRIMARY KEY(jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES(jobs(id))";
     # Do we want to have a table with all the nodes in the system?
     # And with all the switches?
     sqlite3 $REMORADB "CREATE TABLE network (jobid INTEGER, FOREIGN KEY(jobid) REFERENCES jobs(id))"; # Finish this
-    sqlite3 $REMORADB "CREATE TABLE ib (jobid INTEGER, FOREIGN KEY(jobid) REFERENCES jobs(id))";  # Finish this
     sqlite3 $REMORADB "CREATE TABLE numa_usage (jobid INTEGER, timestamp INTEGER, nodeid INTEGER, local_mem REAL, remote_mem REAL, local_miss REAL, remote_miss REAL, FOREIGN KEY(jobid) REFERENCES jobs(id), PRIMARY KEY(timestamp, nodeid))";
 }
 
-# This functions takes as arguments the following values:
+# This function takes as arguments the following values:
 #   - jobid
 #   - timestamp
 #   - node
@@ -90,7 +90,20 @@ insert_memory_usage() {
     fi
 }
 
-# This functions takes as arguments the following values:
+
+# This function takes as arguments the following values:
+#   - jobid
+#   - timestamp
+#   - node
+#   - packets: number of packets sent
+insert_ib_usage() {
+    if [ "$#" -ne 4 ]; then
+        print_error " Incorrect syntax: insufficient arguments. "
+    else
+        sqlite3 $REMORADB "INSERT INTO ib_usage (jobid, timestamp, node, packets) VALUES ($1, $2, '$3', $4)";
+    fi
+}
+# This function takes as arguments the following values:
 #   - jobid
 #   - timestamp
 #   - fs_name
@@ -104,7 +117,7 @@ insert_cpu_usage() {
     fi
 }
 
-# This functions takes as arguments the following values:
+# This function takes as arguments the following values:
 #   - jobid
 #   - timestamp
 #   - filesystem name (HOME, WORK, SCRATCH,...)
@@ -117,7 +130,7 @@ insert_fs_usage() {
     fi
 }
 
-# This functions takes as arguments the following values:
+# This function takes as arguments the following values:
 #   - jobid
 #   - timestamp
 #   - node_id (name of the node)

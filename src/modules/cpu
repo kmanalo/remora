@@ -69,3 +69,8 @@ finalize_module_cpu()
 {
   :
 }
+
+store_data_db_cpu()
+{
+  :
+}

@@ -93,7 +93,7 @@ fi
 
 }
 
-store_data_db()
+store_data_db_memory()
 {
     local jobid=$REMORA_JOB_ID
     local files=($2/mem_stats_*.txt)

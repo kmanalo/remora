@@ -168,3 +168,8 @@ finalize_module_dvs()
     done
   fi
 }
+
+store_data_db_dvs()
+{
+  :
+}
