@@ -95,9 +95,7 @@ fi
 
 store_data_db()
 {
-#    local jobid=$2
-#    jobid=${jobid#remora_}
-    jobid=6514048
+    local jobid=$REMORA_JOB_ID
     local files=($2/mem_stats_*.txt)
     local prefix="$2/mem_stats_"
     for file in "${files[@]}"; do
@@ -109,14 +107,16 @@ store_data_db()
                 idx=1
                 continue;
             fi
-            local timestamp=`echo $line | awk '{print $1;}'`
-            local vmemmax=`echo $line | awk '{print $2;}'`
-            local vmem=`echo $line | awk '{print $3;}'`
-            local rmemmax=`echo $line | awk '{print $4;}'`
-            local rmem=`echo $line | awk '{print $5;}'`
-            local shmem=`echo $line | awk '{print $6;}'`
-            local memfree=`echo $line | awk '{print $7;}'`
-            local totalmax=`echo $line | awk '{print $8;}'`
+            read timestamp vmemmax vmem rmemmax rmem shmem memfree totalmax <<< "$line"
+            #local timestamp=`echo $line | awk '{print $1;}'`
+            #local vmemmax=`echo $line | awk '{print $2;}'`
+            #local vmem=`echo $line | awk '{print $3;}'`
+            #local rmemmax=`echo $line | awk '{print $4;}'`
+            #local rmem=`echo $line | awk '{print $5;}'`
+            #local shmem=`echo $line | awk '{print $6;}'`
+            #local memfree=`echo $line | awk '{print $7;}'`
+            #local totalmax=`echo $line | awk '{print $8;}'`
+
             insert_memory_usage $jobid $timestamp $node $vmemmax $vmem $rmemmax $rmem $shmem $memfree $totalmax
         done < "$file"
     done
