@@ -26,7 +26,9 @@
 REMORADB=$HOME/.remora.db
 
 # Current version of the database
-REMORADB_VERSION=1.6
+REMORADB_VERSION=1.6;
+
+sqlite3 $REMORADB "PRAGMA foreign_keys = ON"
 
 # Function that returns the version stored in the main table of the database
 check_db_version()
