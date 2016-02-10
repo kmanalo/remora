@@ -176,7 +176,8 @@ finalize_module_lustre()
 }
 
 
-store_data_db_lustre() {
+store_data_db_lustre() 
+{
   # Store data in the db
     jobid=$REMORA_JOB_ID
     local files=($2/lustre_*.txt)

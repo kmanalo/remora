@@ -61,3 +61,8 @@ finalize_module_network()
     done
   fi
 }
+
+store_data_db_network()
+{
+  :
+}

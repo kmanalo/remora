@@ -72,5 +72,27 @@ finalize_module_cpu()
 
 store_data_db_cpu()
 {
-  :
+    local jobid=$REMORA_JOB_ID
+    local files=($2/cpu_*.txt)
+    local prefix="$2/cpu_"
+    for file in "${files[@]}"; do
+        local node=${file#$prefix}
+        node=${node%.txt}
+        local timestamp=0
+        local prefix="%usr"
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            if [[ $line == *"time"* ]]; then
+                timestamp = `echo $line | awk '{print $2;}'`
+            elif [[ $line == *"usr"* ]]; then
+                line=${line#$prefix}
+                cpus_usage=($line)
+                local idx=1
+                for cpu_usage in "${cpus_usage[@]}"
+                do
+                    insert_cpu_usage $jobid $timestamp $node cpu$idx ${cpu_usage}
+                    ((idx+=1))
+                done
+            fi
+        done < "$file"
+    done
 }
