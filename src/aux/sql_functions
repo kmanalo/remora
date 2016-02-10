@@ -55,9 +55,9 @@ check_db_exists()
 #
 #           remora_info                         jobs
 #                                                |
-#         ___________________________________________________________________________________
-#           |                |                   |               |              |           |
-#         numa          memory_usage        cpu_usage       filesystem      network         IB
+#         ______________________________________________________________________________________________
+#           |          |             |            |         |           |         |         |
+#         numa    memory_usage    cpu_usage    network     IB    mic/gpu_usage   lustre    dvs
 create_database()
 {
     sqlite3 $REMORADB "CREATE TABLE remora_info (version INTEGER, date INTEGER)";
@@ -65,12 +65,15 @@ create_database()
     sqlite3 $REMORADB "CREATE TABLE jobs (id INTEGER PRIMARY KEY, time_start INTEGER, time_end INTEGER, commmand TEXT, path TEXT, nodes TEXT)";
     sqlite3 $REMORADB "CREATE TABLE memory_usage (jobid INTEGER, timestamp INTEGER, node TEXT, vmemmax REAL, vmem REAL, rmemmax REAL, rmem REAL, shmem REAL, memfree REAL, totalmax REAL, PRIMARY KEY(jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES jobs(id))";
     sqlite3 $REMORADB "CREATE TABLE cpu_usage (jobid INTEGER, timestamp INTEGER, node TEXT, cpuid INTEGER, usage REAL, FOREIGN KEY(jobid) REFERENCES jobs(id), PRIMARY KEY(jobid, timestamp, cpuid, node))" ;
-    sqlite3 $REMORADB "CREATE TABLE filesystem (jobid INTEGER, timestamp INTEGER, node TEXT, fs_name TEXT, requests INTEGER, read INTEGER, write INTEGER, PRIMARY KEY (jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES jobs(id))";
+    sqlite3 $REMORADB "CREATE TABLE lustre_usage (jobid INTEGER, timestamp INTEGER, node TEXT, fs_name TEXT, requests INTEGER, read INTEGER, write INTEGER, PRIMARY KEY (jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES jobs(id))";
     sqlite3 $REMORADB "CREATE TABLE ib_usage (jobid INTEGER, timestamp INTEGER, node TEXT, packets INTEGER, PRIMARY KEY(jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES(jobs(id))";
     # Do we want to have a table with all the nodes in the system?
     # And with all the switches?
     sqlite3 $REMORADB "CREATE TABLE network (jobid INTEGER, FOREIGN KEY(jobid) REFERENCES jobs(id))"; # Finish this
     sqlite3 $REMORADB "CREATE TABLE numa_usage (jobid INTEGER, timestamp INTEGER, node TEXT, node0hit REAL, node1hit REAL, node0miss REAL, node1miss REAL, node0local REAL, node1local REAL, node0other REAL, node1other REAL, node0free REAL, node1free REAL, node0used REAL, node1used REAL, FOREIGN KEY(jobid) REFERENCES jobs(id), PRIMARY KEY(jobid, timestamp, nodeid))";
+    sqlite3 $REMORADB "CREATE TABLE gpu_usage (jobid INTEGER, timestamp INTEGER, node TEXT, memused REAL, PRIMARY KEY (jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES(jobs(id))";
+    sqlite3 $REMORADB "CREATE TABLE mic_usage (jobid INTEGER, timestamp INTEGER, node TEXT, memused REAL, PRIMARY KEY (jobid, timestamp, node), FOREIGN KEY(jobid) REFERENCES(jobs(id))";
+}
 }
 
 # This function takes as arguments the following values:
@@ -124,11 +127,11 @@ insert_cpu_usage() {
 #   - timestamp
 #   - filesystem name (HOME, WORK, SCRATCH,...)
 #   - requests
-insert_fs_usage() {
+insert_lustre_usage() {
     if [ "$#" -ne 6 ]; then
         print_error " Incorrect syntax: insufficient arguments. "
     else
-        sqlite3 $REMORADB "INSERT INTO filesystem (jobid, timestamp, fsname, requests, read, write) VALUES ($1, $2, '$3', '$4', '$5', '$6')";
+        sqlite3 $REMORADB "INSERT INTO lustre_usage (jobid, timestamp, fsname, requests, read, write) VALUES ($1, $2, '$3', '$4', '$5', '$6')";
     fi
 }
 
@@ -142,6 +145,23 @@ insert_numa_usage() {
     else
         sqlite3 $REMORADB "INSERT INTO numa_usage (jobid, timestamp, node_id, node0hit, node1hit, node0miss, node1miss, node0local, node1local, node0other, node1other, node0free, node1free, node0used, node1used) VALUES ($1, $2, '$3', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)";
     fi
+}
+
+insert_mic_usage() {
+  if [ "$#" -ne 4 ]; then
+    print_error "Incorrect syntax: insufficient arguments. "
+  else
+    sqlite3 $REMORADB "INSERT INTO mic_usage (jobid, timestamp, node, memused) VALUES ($1, $2, '$3', $4)";
+  fi
+}
+
+
+insert_gpu_usage() {
+  if [ "$#" -ne 4 ]; then
+    print_error "Incorrect syntax: insufficient arguments. "
+  else
+    sqlite3 $REMORADB "INSERT INTO gpu_usage (jobid, timestamp, node, memused) VALUES ($1, $2, '$3', $4)";
+  fi
 }
 
 # This function will need to be implemented: if the version of the database is older than
