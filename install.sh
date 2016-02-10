@@ -57,8 +57,9 @@ echo             | tee -a $BUILD_LOG
 #Now build mpstat
 echo "Building mpstat ..." | tee -a $BUILD_LOG
 cd $REMORA_BUILD_DIR/extra
-git clone https://github.com/sysstat/sysstat | tee -a $BUILD_LOG
-cd sysstat
+wget https://github.com/sysstat/sysstat/archive/v11.2.0.zip | tee -a $BUILD_LOG
+unzip v11.2.0 | tee -a $BUILD_LOG
+cd sysstat-11.2.0
 ./configure | tee -a $BUILD_LOG
 make mpstat |  tee -a $BUILD_LOG
 echo "Installing mpstat ..."
