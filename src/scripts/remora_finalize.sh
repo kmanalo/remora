@@ -40,7 +40,9 @@ if [ "$REMORA_TMPDIR" != "$REMORA_OUTDIR" ]; then
   done
 fi
 # Remove any temp files leftover
-rm $REMORA_OUTDIR/*.tmp
+if stat -t $REMORA_OUTDIR/*tmp 2> /dev/null 1> /dev/null; then
+  rm $REMORA_OUTDIR/*.tmp
+fi
 # Give time for metadata to be updated
 sleep 5
 
@@ -98,7 +100,10 @@ mv $REMORA_OUTDIR/mem* $REMORA_OUTDIR/MEMORY
 if [ "$REMORA_MODE" == "FULL" ] || [ "$REMORA_MODE" == "MONITOR" ]; then
   if [ "$REMORA_LUSTRE" == "1" ]; then mv $REMORA_OUTDIR/{lustre*,lnet*} $REMORA_OUTDIR/IO; fi
   if [ "$REMORA_DVS" == "1" ]; then mv $REMORA_OUTDIR/dvs* $REMORA_OUTDIR/IO; fi
-  mv $REMORA_OUTDIR/{ib*,trace_*} $REMORA_OUTDIR/NETWORK/
+  mv $REMORA_OUTDIR/ib* $REMORA_OUTDIR/NETWORK/
+  if stat -t $REMORA_OUTDIR/trace_* 2> /dev/null 1> /dev/null; then
+    mv $REMORA_OUTDIR/trace_* $REMORA_OUTDIR/NETWORK/
+  fi
   mv $REMORA_OUTDIR/numa* $REMORA_OUTDIR/NUMA
 fi
 if [ "$REMORA_MODE" == "MONITOR" ]; then
